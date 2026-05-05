@@ -209,6 +209,7 @@
     <a href="#how">How it works</a>
     <a href="#api">API</a>
     <a href="#pricing">Pricing</a>
+    <a href="https://3xb-api-production.up.railway.app/docs" target="_blank" style="color:#7df7ff;text-decoration:none;font-size:14px;margin-left:32px">Live API ↗</a>
     <a href="mailto:almeidacorporation20@gmail.com" class="nav-cta">Get Access</a>
   </div>
 </nav>
@@ -340,7 +341,7 @@
       <div class="dot" style="background:#ff6b9d"></div>
       <div class="dot" style="background:#ffe66d"></div>
       <div class="dot" style="background:#a8ff78"></div>
-      <span style="margin-left:8px">curl https://3xb-api.up.railway.app/stats</span>
+      <span style="margin-left:8px">curl https://3xb-api-production.up.railway.app/stats</span>
     </div>
     <div class="demo-output">
 <span class="k">{</span><br>
@@ -428,9 +429,7 @@
 
 <script>
 // Pull live stats from the API when available
-const API = window.location.hostname === 'localhost'
-  ? 'http://localhost:8000'
-  : 'https://3xb-api.up.railway.app';
+const API = 'https://3xb-api-production.up.railway.app';
 
 fetch(API + '/stats')
   .then(r => r.json())
