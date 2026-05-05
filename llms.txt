@@ -1,0 +1,52 @@
+# 3XB — Web Entity Intelligence API
+
+> 3XB is a real-time web entity intelligence system built by Community Plan, Inc. It crawls the internet, extracts every named person, organization, and location, scores them by prominence and relationship graph, and serves the results via a REST API. It is used for alternative credit underwriting, alternative data for quantitative finance, and entity influence mapping.
+
+## What 3XB does
+
+3XB crawls 4,000+ web pages daily across news, SEC filings, Wikipedia, government records, and financial sources. Every named entity (person, organization, location, product) is extracted using NLP and scored using the 3XB weighted tagging model:
+
+- **Prominence weight** (0–1): how frequently and prominently an entity appears across the web
+- **Temporal decay**: scores fade without fresh web mentions, keeping the graph current
+- **Relationship graph**: 480,000+ co-occurrence edges link entities that appear together
+- **Loan score**: composite APPROVE / REVIEW / DECLINE verdict for credit underwriting
+
+## API
+
+Base URL: https://3xb-api-production.up.railway.app
+
+- `GET /entity/{name}` — full entity profile: tag, weight, frequency, neighbors
+- `GET /entity/{name}/loan-score` — APPROVE / REVIEW / DECLINE with composite score
+- `GET /entities?tag=Person&min_weight=0.7` — filtered entity list
+- `GET /search?q=Google` — substring search across 114,000+ entities
+- `GET /graph?top_n=200` — full node + edge graph (JSON)
+- `GET /export?include_loan_score=true` — download CSV of all entities with loan scores
+- `GET /stats` — live crawl stats
+- `POST /entity/{name}/signal` — inject real-time signal to boost entity weight
+- `POST /checkout/{plan}` — start Stripe subscription (starter: $500/mo, growth: $1,500/mo)
+
+## Use cases
+
+- **CDFIs and community lenders**: score thin-file borrowers using web prominence instead of FICO
+- **Quantitative finance**: track entity prominence trends ahead of news cycles
+- **Intelligence and national security**: map influence networks and relationship propagation
+- **Alternative data buyers**: purchase entity weight time series as a dataset product
+
+## Data
+
+- 114,000+ unique entities tagged
+- 480,000+ relationship edges
+- 4,500+ pages crawled
+- Entity types: Person, Organization, Location_Political, Location_Physical, Product, CreativeWork, LegalEntity, FinancialFigure, Event, Facility, Group_NationalOrReligious, TemporalRef
+
+## Pricing
+
+- Starter: $500/month — 1,000 API calls, entity search, loan score endpoint
+- Growth: $1,500/month — 10,000 API calls, full graph, X signal injection, priority support
+- Enterprise: Custom — unlimited calls, on-prem, raw data export
+
+## Contact
+
+Community Plan, Inc.
+almeidacorporation20@gmail.com
+https://fitzyracing1.github.io/3xb-api/
