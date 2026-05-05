@@ -4,6 +4,8 @@ REST interface into the live 3XB entity database.
 Supports PostgreSQL (production) and SQLite (local dev).
 """
 
+import csv
+import io
 import math
 import os
 import time
@@ -11,7 +13,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 import uvicorn
 import stripe
 
@@ -192,6 +194,63 @@ def by_tag(tag: str, limit: int = Query(50, le=200)):
 @app.get("/tags")
 def list_tags():
     return db.query("SELECT tag, COUNT(*) as count, AVG(weight) as avg_weight FROM entities GROUP BY tag ORDER BY count DESC")
+
+
+@app.get("/export")
+def export_csv(
+    tag: Optional[str] = None,
+    min_weight: float = Query(0.0, ge=0.0, le=1.0),
+    limit: int = Query(10000, le=50000),
+    include_loan_score: bool = False,
+):
+    if tag:
+        rows = db.query(
+            "SELECT name, tag, weight, frequency, last_seen FROM entities WHERE tag=? AND weight>=? ORDER BY weight DESC LIMIT ?",
+            (tag, min_weight, limit)
+        )
+    else:
+        rows = db.query(
+            "SELECT name, tag, weight, frequency, last_seen FROM entities WHERE weight>=? ORDER BY weight DESC LIMIT ?",
+            (min_weight, limit)
+        )
+
+    buf = io.StringIO()
+    fields = ["name", "tag", "weight", "frequency", "last_seen_unix"]
+    if include_loan_score:
+        fields += ["own_weight", "composite_score", "recommendation"]
+    writer = csv.DictWriter(buf, fieldnames=fields)
+    writer.writeheader()
+
+    for r in rows:
+        live = decay_weight(r["weight"], r["last_seen"])
+        row = {
+            "name": r["name"],
+            "tag": r["tag"],
+            "weight": round(live, 4),
+            "frequency": r["frequency"],
+            "last_seen_unix": int(r["last_seen"]),
+        }
+        if include_loan_score:
+            edges = db.query("SELECT target, strength FROM edges WHERE source=?", (r["name"],))
+            scores = []
+            for e in edges:
+                nb = db.query("SELECT weight, last_seen FROM entities WHERE name=?", (e["target"],), one=True)
+                if nb:
+                    scores.append(decay_weight(nb["weight"], nb["last_seen"]) * e["strength"])
+            neighbor_avg = round(sum(scores) / len(scores), 4) if scores else live
+            composite = round(live * 0.7 + neighbor_avg * 0.3, 4)
+            row["own_weight"] = live
+            row["composite_score"] = composite
+            row["recommendation"] = "APPROVE" if composite >= 0.75 else "REVIEW" if composite >= 0.55 else "DECLINE"
+        writer.writerow(row)
+
+    buf.seek(0)
+    filename = f"3xb_entities{'_' + tag if tag else ''}{'_loanscore' if include_loan_score else ''}.csv"
+    return StreamingResponse(
+        buf,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @app.get("/graph")
