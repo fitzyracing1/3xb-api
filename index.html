@@ -411,6 +411,19 @@
   </div>
 </section>
 
+<!-- GRAPH -->
+<section id="graph" style="padding-top:0;max-width:100%;padding-left:0;padding-right:0">
+  <div style="max-width:1100px;margin:0 auto;padding:0 48px 40px">
+    <div class="section-tag">// live entity graph</div>
+    <h2>The web's entity network, <em>live.</em></h2>
+    <p class="section-sub">Top 200 entities by weight. Node size = prominence. Edges = co-occurrence on the same page. Drag · Scroll to zoom · Hover for detail.</p>
+  </div>
+  <div id="graph-container" style="width:100%;height:600px;background:#07080f;border-top:1px solid #1e2133;border-bottom:1px solid #1e2133;position:relative;">
+    <div id="graph-loading" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#5a6080;font-family:monospace;font-size:13px;">Loading entity graph...</div>
+    <svg id="graph-svg" style="width:100%;height:100%"></svg>
+  </div>
+</section>
+
 <!-- CTA -->
 <div class="cta-section">
   <div class="section-tag" style="display:inline-block;margin-bottom:20px">// get started</div>
@@ -427,8 +440,8 @@
   </div>
 </footer>
 
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
-// Pull live stats from the API when available
 const API = 'https://3xb-api-production.up.railway.app';
 
 fetch(API + '/stats')
@@ -440,6 +453,65 @@ fetch(API + '/stats')
     document.getElementById('stat-pages').innerHTML    = fmt(d.pages_crawled) + '<span>+</span>';
   })
   .catch(() => {});
+
+// ── ENTITY GRAPH ──────────────────────────────────────────────
+const COLOR = {
+  "Person":"#ff6b9d","Organization":"#7df7ff","Location_Political":"#ffe66d",
+  "Location_Physical":"#a8ff78","Product":"#ff9f43","FinancialFigure":"#00d2ff",
+  "Event":"#ee5a24","LegalEntity":"#8c7ae6","CreativeWork":"#fd79a8",
+  "Group_NationalOrReligious":"#fdcb6e","Facility":"#55efc4",
+  "TemporalRef":"#636e72","Language":"#b2bec3",
+};
+
+fetch(API + '/graph?top_n=200&min_weight=0.7')
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('graph-loading').remove();
+    const nodes = data.nodes.map(d => ({...d}));
+    const links = data.edges.map(d => ({source: d.source, target: d.target}));
+    const svg = d3.select('#graph-svg');
+    const W = document.getElementById('graph-container').clientWidth;
+    const H = 600;
+    svg.attr('viewBox', `0 0 ${W} ${H}`);
+    const g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([0.2,6]).on('zoom', e => g.attr('transform', e.transform)));
+    function r(d) { return Math.max(4, Math.min(26, 3 + Math.sqrt(d.frequency) * d.weight * 1.2)); }
+    const sim = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(d=>d.name).distance(50).strength(0.3))
+      .force('charge', d3.forceManyBody().strength(-120))
+      .force('center', d3.forceCenter(W/2, H/2))
+      .force('collision', d3.forceCollide(d=>r(d)+2));
+    const link = g.append('g').selectAll('line').data(links).join('line')
+      .attr('stroke','#ffffff10').attr('stroke-width',0.8);
+    const tip = document.createElement('div');
+    tip.style.cssText='position:fixed;background:rgba(5,5,15,.95);border:1px solid #444;padding:8px 12px;border-radius:6px;font-size:12px;font-family:monospace;pointer-events:none;display:none;color:#e0e0e0;z-index:999';
+    document.body.appendChild(tip);
+    const node = g.append('g').selectAll('circle').data(nodes).join('circle')
+      .attr('r', d=>r(d))
+      .attr('fill', d=>COLOR[d.tag]||'#888')
+      .attr('fill-opacity', 0.85)
+      .attr('stroke','#fff2').attr('stroke-width',0.5)
+      .call(d3.drag()
+        .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+        .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+        .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}))
+      .on('mouseover',(e,d)=>{
+        tip.style.display='block';
+        tip.innerHTML=`<b style="color:#7df7ff">${d.name}</b><br>${d.tag}<br>weight: ${d.weight.toFixed(4)}<br>freq: ${d.frequency.toLocaleString()}`;
+        d3.select(e.currentTarget).attr('stroke','#fff').attr('stroke-width',2);
+      })
+      .on('mousemove',e=>{tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-28)+'px';})
+      .on('mouseout',(e)=>{tip.style.display='none';d3.select(e.currentTarget).attr('stroke','#fff2').attr('stroke-width',0.5);});
+    const label = g.append('g').selectAll('text').data(nodes.filter(d=>d.frequency>80)).join('text')
+      .text(d=>d.name).attr('font-size',10).attr('fill','#ffffffaa')
+      .attr('dx',d=>r(d)+3).attr('dy','0.35em').style('pointer-events','none');
+    sim.on('tick',()=>{
+      link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      node.attr('cx',d=>d.x).attr('cy',d=>d.y);
+      label.attr('x',d=>d.x).attr('y',d=>d.y);
+    });
+  })
+  .catch(()=>{ document.getElementById('graph-loading').textContent='Graph unavailable'; });
 </script>
 </body>
 </html>
