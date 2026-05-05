@@ -49,12 +49,15 @@ def health():
 
 @app.get("/debug", include_in_schema=False)
 def debug():
-    db_url = os.environ.get("DATABASE_URL", "NOT SET")
-    masked = db_url[:30] + "..." if len(db_url) > 30 else db_url
+    pg_url  = os.environ.get("PG_URL", "")
+    db_url  = os.environ.get("DATABASE_URL", "")
+    active  = pg_url or db_url
+    masked  = active[:35] + "..." if len(active) > 35 else active
     return JSONResponse({
-        "DATABASE_URL": masked,
+        "PG_URL": pg_url[:20] + "..." if pg_url else "NOT SET",
+        "DATABASE_URL": db_url[:20] + "..." if db_url else "NOT SET",
         "USE_POSTGRES": db.USE_POSTGRES,
-        "DB_PATH": db.SQLITE_PATH,
+        "active_url": masked,
     })
 
 

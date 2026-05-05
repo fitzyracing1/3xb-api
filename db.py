@@ -6,12 +6,12 @@ import os
 import sqlite3
 from contextlib import contextmanager
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("PG_URL") or os.environ.get("DATABASE_URL") or ""
 SQLITE_PATH  = os.environ.get("DB_PATH", os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "3xb_internet.db"
 ))
 
-USE_POSTGRES = bool(DATABASE_URL)
+USE_POSTGRES = DATABASE_URL.startswith("postgres")
 
 if USE_POSTGRES:
     import psycopg2
