@@ -47,6 +47,17 @@ def health():
     return JSONResponse({"status": "ok"})
 
 
+@app.get("/debug", include_in_schema=False)
+def debug():
+    db_url = os.environ.get("DATABASE_URL", "NOT SET")
+    masked = db_url[:30] + "..." if len(db_url) > 30 else db_url
+    return JSONResponse({
+        "DATABASE_URL": masked,
+        "USE_POSTGRES": db.USE_POSTGRES,
+        "DB_PATH": db.SQLITE_PATH,
+    })
+
+
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def root():
     return """
