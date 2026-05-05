@@ -1,6 +1,5 @@
 """
-Database connection — uses PostgreSQL (DATABASE_URL) in production,
-SQLite fallback for local dev.
+Database connection — PostgreSQL (DATABASE_URL) in production, SQLite locally.
 """
 
 import os
@@ -19,41 +18,19 @@ if USE_POSTGRES:
     import psycopg2.extras
 
 
-def _init_postgres(conn):
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS entities (
-            name        TEXT PRIMARY KEY,
-            tag         TEXT,
-            weight      REAL,
-            frequency   INTEGER DEFAULT 1,
-            last_seen   REAL,
-            metadata    TEXT
-        )
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS edges (
-            source      TEXT,
-            target      TEXT,
-            relation    TEXT,
-            strength    REAL,
-            PRIMARY KEY (source, target, relation)
-        )
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS crawled_urls (
-            url          TEXT PRIMARY KEY,
-            crawled_at   REAL,
-            entity_count INTEGER
-        )
-    """)
-    conn.commit()
+def _pg_sql(sql: str) -> str:
+    """Convert SQLite-style ? placeholders to Postgres %s."""
+    return sql.replace("?", "%s")
 
 
 @contextmanager
 def get_conn():
     if USE_POSTGRES:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=psycopg2.extras.RealDictCursor,
+            sslmode="require",
+        )
         try:
             yield conn
         finally:
@@ -68,36 +45,23 @@ def get_conn():
 
 
 def query(sql: str, params: tuple = (), one: bool = False):
-    """Run a SELECT and return list of dicts (or one dict)."""
-    if USE_POSTGRES:
-        # Convert SQLite ? placeholders to Postgres %s
-        sql = sql.replace("?", "%s")
+    """Run a SELECT, return list of dicts (or one dict if one=True)."""
     with get_conn() as conn:
         if USE_POSTGRES:
             cur = conn.cursor()
-            cur.execute(sql, params)
-            rows = cur.fetchall()
-            result = [dict(r) for r in rows]
+            cur.execute(_pg_sql(sql), params)
+            rows = [dict(r) for r in cur.fetchall()]
         else:
-            cur = conn.execute(sql, params)
-            rows = cur.fetchall()
-            result = [dict(r) for r in rows]
-    return result[0] if (one and result) else result
+            rows = [dict(r) for r in conn.execute(sql, params).fetchall()]
+    return rows[0] if (one and rows) else rows
 
 
 def execute(sql: str, params: tuple = ()):
     """Run INSERT / UPDATE / DELETE."""
-    if USE_POSTGRES:
-        sql = sql.replace("?", "%s")
-        sql = sql.replace("ON CONFLICT(name)", "ON CONFLICT (name)")
-        sql = sql.replace("ON CONFLICT(url)", "ON CONFLICT (url)")
-        sql = sql.replace("INSERT OR REPLACE", "INSERT")
-        if "INSERT" in sql and "ON CONFLICT" not in sql:
-            sql = sql.rstrip() + " ON CONFLICT DO NOTHING"
     with get_conn() as conn:
         if USE_POSTGRES:
             cur = conn.cursor()
-            cur.execute(sql, params)
+            cur.execute(_pg_sql(sql), params)
             conn.commit()
         else:
             conn.execute(sql, params)
