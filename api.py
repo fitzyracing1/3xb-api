@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
 
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "3xb_internet.db"))
@@ -55,6 +55,11 @@ def decay_weight(weight: float, last_seen: float, half_life_days: float = 30.0) 
 # ─────────────────────────────────────────────
 # ROUTES
 # ─────────────────────────────────────────────
+
+@app.get("/health", include_in_schema=False)
+def health():
+    return JSONResponse({"status": "ok"})
+
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def root():
