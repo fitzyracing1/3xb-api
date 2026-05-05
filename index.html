@@ -378,7 +378,7 @@
         <li>Loan score endpoint</li>
         <li>Email support</li>
       </ul>
-      <a href="mailto:almeidacorporation20@gmail.com?subject=3XB Starter Plan" class="plan-btn outline">Get Started</a>
+      <button onclick="startCheckout('starter')" class="plan-btn outline">Subscribe — $500/mo</button>
     </div>
     <div class="plan featured">
       <div class="plan-name">Growth</div>
@@ -392,7 +392,7 @@
         <li>Priority support</li>
         <li>Custom seed domains</li>
       </ul>
-      <a href="mailto:almeidacorporation20@gmail.com?subject=3XB Growth Plan" class="plan-btn solid">Get Started</a>
+      <button onclick="startCheckout('growth')" class="plan-btn solid">Subscribe — $1,500/mo</button>
     </div>
     <div class="plan">
       <div class="plan-name">Enterprise</div>
@@ -440,9 +440,53 @@
   </div>
 </footer>
 
+<style>
+  .plan-btn[onclick] { cursor:pointer; border:none; width:100%; }
+  .plan-btn[onclick]:disabled { opacity:0.6; cursor:wait; }
+  #toast {
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+    background:#0e1018;border:1px solid var(--cyan);color:#fff;
+    padding:14px 28px;border-radius:10px;font-size:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:9999;
+    display:none;text-align:center;
+  }
+  #toast.success { border-color:var(--green); }
+  #toast.error   { border-color:var(--pink);  }
+</style>
+<div id="toast"></div>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
 const API = 'https://3xb-api-production.up.railway.app';
+
+function showToast(msg, type='success', ms=4000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, ms);
+}
+
+async function startCheckout(plan) {
+  const btns = document.querySelectorAll('.plan-btn[onclick]');
+  btns.forEach(b => { b.disabled = true; b.textContent = 'Redirecting…'; });
+  try {
+    const res = await fetch(API + '/checkout/' + plan, { method: 'POST' });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Server error');
+    const { url } = await res.json();
+    window.location.href = url;
+  } catch (e) {
+    showToast('Payment unavailable — email almeidacorporation20@gmail.com to subscribe.', 'error', 6000);
+    btns.forEach((b, i) => {
+      b.disabled = false;
+      b.textContent = i === 0 ? 'Subscribe — $500/mo' : 'Subscribe — $1,500/mo';
+    });
+  }
+}
+
+// Show success/cancel message from Stripe redirect
+const params = new URLSearchParams(location.search);
+if (params.get('checkout') === 'success') showToast('✓ Subscription confirmed! Check your email for API access details.', 'success', 8000);
+if (params.get('checkout') === 'cancel')  showToast('Checkout cancelled — come back when you\'re ready.', 'error', 5000);
 
 fetch(API + '/stats')
   .then(r => r.json())

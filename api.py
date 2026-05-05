@@ -9,12 +9,26 @@ import os
 import time
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
+import stripe
 
 import db
+
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+
+PLANS = {
+    "starter": {
+        "price_id": os.environ.get("STRIPE_STARTER_PRICE_ID", ""),
+        "name": "3XB Starter — $500/mo",
+    },
+    "growth": {
+        "price_id": os.environ.get("STRIPE_GROWTH_PRICE_ID", ""),
+        "name": "3XB Growth — $1,500/mo",
+    },
+}
 
 PORT = int(os.environ.get("PORT", 8000))
 
@@ -203,6 +217,44 @@ def inject_signal(name: str, signal_strength: float = Query(..., ge=0.0, le=1.0)
     new_weight = min(0.9999, round(row["weight"] + signal_strength * 0.1, 4))
     db.execute("UPDATE entities SET weight=?, last_seen=? WHERE name=?", (new_weight, time.time(), name))
     return {"entity": name, "signal_type": signal_type, "weight_before": row["weight"], "weight_after": new_weight}
+
+
+@app.post("/checkout/{plan}")
+def create_checkout(plan: str, request: Request):
+    if not stripe.api_key:
+        raise HTTPException(503, "Stripe not configured")
+    plan_data = PLANS.get(plan)
+    if not plan_data:
+        raise HTTPException(404, f"Unknown plan '{plan}'")
+    if not plan_data["price_id"]:
+        raise HTTPException(503, f"Price ID for '{plan}' not configured")
+    origin = str(request.base_url).rstrip("/")
+    session = stripe.checkout.Session.create(
+        mode="subscription",
+        line_items=[{"price": plan_data["price_id"], "quantity": 1}],
+        success_url=f"{origin}/?checkout=success",
+        cancel_url=f"{origin}/?checkout=cancel",
+    )
+    return {"url": session.url}
+
+
+@app.post("/webhook", include_in_schema=False)
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+    if secret:
+        try:
+            event = stripe.Webhook.construct_event(payload, sig, secret)
+        except Exception:
+            raise HTTPException(400, "Invalid signature")
+    else:
+        import json
+        event = json.loads(payload)
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        print(f"[stripe] new subscription: {session.get('customer_email')} — {session.get('id')}")
+    return {"received": True}
 
 
 if __name__ == "__main__":
