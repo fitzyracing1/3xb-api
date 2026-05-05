@@ -1,13 +1,12 @@
 """
 3XB Entity Graph API
 REST interface into the live 3XB entity database.
+Supports PostgreSQL (production) and SQLite (local dev).
 """
 
 import math
 import os
-import sqlite3
 import time
-from contextlib import contextmanager
 from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException, Query
@@ -15,7 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
 
-DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "3xb_internet.db"))
+import db
+
 PORT = int(os.environ.get("PORT", 8000))
 
 app = FastAPI(
@@ -30,20 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# ─────────────────────────────────────────────
-# DB HELPERS
-# ─────────────────────────────────────────────
-
-@contextmanager
-def db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-    finally:
-        conn.close()
 
 
 def decay_weight(weight: float, last_seen: float, half_life_days: float = 30.0) -> float:
@@ -71,15 +57,13 @@ def root():
     <h1>3XB Entity Graph API v2.0</h1>
     <p>Weighted entity tagging across the web — Community Plan, Inc.</p>
     <ul>
-      <li><a href="/docs">Interactive API Docs (Swagger)</a></li>
-      <li><a href="/stats">GET /stats</a> — crawl & entity stats</li>
-      <li><a href="/entities?limit=20">GET /entities</a> — top entities</li>
-      <li>GET /entity/{name} — single entity detail</li>
-      <li>GET /entity/{name}/neighbors — connected entities</li>
-      <li>GET /entity/{name}/loan-score — loan risk score</li>
-      <li><a href="/graph">GET /graph</a> — full node+edge graph</li>
-      <li>GET /search?q= — search by name</li>
-      <li>GET /tag/{tag} — entities by type</li>
+      <li><a href="/docs">Interactive API Docs</a></li>
+      <li><a href="/stats">GET /stats</a></li>
+      <li><a href="/entities?limit=20">GET /entities</a></li>
+      <li>GET /entity/{name}</li>
+      <li>GET /entity/{name}/loan-score</li>
+      <li>GET /search?q=</li>
+      <li>GET /graph</li>
     </ul>
     </body></html>
     """
@@ -87,23 +71,17 @@ def root():
 
 @app.get("/stats")
 def stats():
-    """Overall crawl and entity stats."""
-    with db() as conn:
-        pages   = conn.execute("SELECT COUNT(*) FROM crawled_urls").fetchone()[0]
-        entities = conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0]
-        edges   = conn.execute("SELECT COUNT(*) FROM edges").fetchone()[0]
-        tags    = conn.execute(
-            "SELECT tag, COUNT(*) as n FROM entities GROUP BY tag ORDER BY n DESC"
-        ).fetchall()
-        top5    = conn.execute(
-            "SELECT name, tag, weight, frequency FROM entities ORDER BY weight DESC, frequency DESC LIMIT 5"
-        ).fetchall()
+    pages    = db.query("SELECT COUNT(*) as n FROM crawled_urls", one=True)["n"]
+    entities = db.query("SELECT COUNT(*) as n FROM entities", one=True)["n"]
+    edges    = db.query("SELECT COUNT(*) as n FROM edges", one=True)["n"]
+    tags     = db.query("SELECT tag, COUNT(*) as n FROM entities GROUP BY tag ORDER BY n DESC")
+    top5     = db.query("SELECT name, tag, weight, frequency FROM entities ORDER BY weight DESC, frequency DESC LIMIT 5")
     return {
         "pages_crawled": pages,
         "unique_entities": entities,
         "relationship_edges": edges,
         "entities_by_type": {r["tag"]: r["n"] for r in tags},
-        "top_5": [dict(r) for r in top5],
+        "top_5": top5,
     }
 
 
@@ -114,153 +92,78 @@ def list_entities(
     tag: Optional[str] = None,
     sort_by: str = Query("weight", enum=["weight", "frequency"]),
 ):
-    """List top entities, optionally filtered by type and minimum weight."""
     order = "weight DESC, frequency DESC" if sort_by == "weight" else "frequency DESC, weight DESC"
-    with db() as conn:
-        if tag:
-            rows = conn.execute(
-                f"SELECT * FROM entities WHERE tag=? AND weight>=? ORDER BY {order} LIMIT ?",
-                (tag, min_weight, limit)
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                f"SELECT * FROM entities WHERE weight>=? ORDER BY {order} LIMIT ?",
-                (min_weight, limit)
-            ).fetchall()
-    return [dict(r) for r in rows]
+    if tag:
+        return db.query(
+            f"SELECT name, tag, weight, frequency FROM entities WHERE tag=? AND weight>=? ORDER BY {order} LIMIT ?",
+            (tag, min_weight, limit)
+        )
+    return db.query(
+        f"SELECT name, tag, weight, frequency FROM entities WHERE weight>=? ORDER BY {order} LIMIT ?",
+        (min_weight, limit)
+    )
 
 
 @app.get("/entity/{name}")
 def get_entity(name: str):
-    """Full detail for a single entity including live (decayed) weight."""
-    with db() as conn:
-        row = conn.execute("SELECT * FROM entities WHERE name=?", (name,)).fetchone()
-        if not row:
-            raise HTTPException(404, f"Entity '{name}' not found")
-        r = dict(row)
-        r["live_weight"] = decay_weight(r["weight"], r["last_seen"])
-        r["highlighted"] = r["live_weight"] >= 0.75
-
-        neighbors = conn.execute(
-            "SELECT target as entity, relation, strength FROM edges WHERE source=? "
-            "UNION SELECT source as entity, '←'||relation, strength FROM edges WHERE target=? LIMIT 50",
-            (name, name)
-        ).fetchall()
-        r["neighbors"] = [dict(n) for n in neighbors]
-    return r
-
-
-@app.get("/entity/{name}/neighbors")
-def get_neighbors(name: str, depth: int = Query(1, ge=1, le=3)):
-    """BFS neighbor traversal up to `depth` hops."""
-    with db() as conn:
-        row = conn.execute("SELECT name FROM entities WHERE name=?", (name,)).fetchone()
-        if not row:
-            raise HTTPException(404, f"Entity '{name}' not found")
-
-        visited = {name: 1.0}
-        frontier = [name]
-        result = {}
-
-        for hop in range(depth):
-            next_frontier = []
-            for node in frontier:
-                edges = conn.execute(
-                    "SELECT target, strength FROM edges WHERE source=?", (node,)
-                ).fetchall()
-                for e in edges:
-                    nb, strength = e["target"], e["strength"]
-                    if nb not in visited:
-                        propagated = round(visited[node] * strength, 4)
-                        visited[nb] = propagated
-                        result[nb] = {"propagated_score": propagated, "hop": hop + 1}
-                        next_frontier.append(nb)
-            frontier = next_frontier
-
-    return {"entity": name, "depth": depth, "neighbors": result}
+    row = db.query("SELECT * FROM entities WHERE name=?", (name,), one=True)
+    if not row:
+        raise HTTPException(404, f"Entity '{name}' not found")
+    row["live_weight"] = decay_weight(row["weight"], row["last_seen"])
+    row["highlighted"] = row["live_weight"] >= 0.75
+    row["neighbors"] = db.query(
+        "SELECT target as entity, relation, strength FROM edges WHERE source=? LIMIT 50",
+        (name,)
+    )
+    return row
 
 
 @app.get("/entity/{name}/loan-score")
 def loan_score(name: str):
-    """
-    Composite loan risk score for an entity.
-    Combines own weight + 2-hop neighbor graph risk.
-    Returns APPROVE / REVIEW / DECLINE recommendation.
-    """
-    with db() as conn:
-        row = conn.execute(
-            "SELECT weight, last_seen FROM entities WHERE name=?", (name,)
-        ).fetchone()
-        if not row:
-            raise HTTPException(404, f"Entity '{name}' not found")
-
-        own_weight = decay_weight(row["weight"], row["last_seen"])
-
-        edges = conn.execute(
-            "SELECT target, strength FROM edges WHERE source=?", (name,)
-        ).fetchall()
-
-        neighbor_scores = []
-        for e in edges:
-            nb_row = conn.execute(
-                "SELECT weight, last_seen FROM entities WHERE name=?", (e["target"],)
-            ).fetchone()
-            if nb_row:
-                nb_w = decay_weight(nb_row["weight"], nb_row["last_seen"])
-                neighbor_scores.append(nb_w * e["strength"])
-
-        neighbor_avg = round(sum(neighbor_scores) / len(neighbor_scores), 4) if neighbor_scores else own_weight
-        composite = round(own_weight * 0.7 + neighbor_avg * 0.3, 4)
-
+    row = db.query("SELECT weight, last_seen FROM entities WHERE name=?", (name,), one=True)
+    if not row:
+        raise HTTPException(404, f"Entity '{name}' not found")
+    own_weight = decay_weight(row["weight"], row["last_seen"])
+    edges = db.query("SELECT target, strength FROM edges WHERE source=?", (name,))
+    neighbor_scores = []
+    for e in edges:
+        nb = db.query("SELECT weight, last_seen FROM entities WHERE name=?", (e["target"],), one=True)
+        if nb:
+            neighbor_scores.append(decay_weight(nb["weight"], nb["last_seen"]) * e["strength"])
+    neighbor_avg = round(sum(neighbor_scores) / len(neighbor_scores), 4) if neighbor_scores else own_weight
+    composite = round(own_weight * 0.7 + neighbor_avg * 0.3, 4)
     return {
         "borrower": name,
         "own_weight": own_weight,
         "neighbor_risk_avg": neighbor_avg,
         "composite_score": composite,
-        "recommendation": (
-            "APPROVE" if composite >= 0.75 else
-            "REVIEW"  if composite >= 0.55 else
-            "DECLINE"
-        ),
+        "recommendation": "APPROVE" if composite >= 0.75 else "REVIEW" if composite >= 0.55 else "DECLINE",
         "neighbor_count": len(neighbor_scores),
     }
 
 
 @app.get("/search")
 def search(q: str = Query(..., min_length=2), limit: int = Query(20, le=100)):
-    """Search entities by name (case-insensitive substring)."""
-    with db() as conn:
-        rows = conn.execute(
-            "SELECT name, tag, weight, frequency FROM entities "
-            "WHERE name LIKE ? ORDER BY weight DESC, frequency DESC LIMIT ?",
-            (f"%{q}%", limit)
-        ).fetchall()
-    return [dict(r) for r in rows]
+    return db.query(
+        "SELECT name, tag, weight, frequency FROM entities WHERE name LIKE ? ORDER BY weight DESC LIMIT ?",
+        (f"%{q}%", limit)
+    )
 
 
 @app.get("/tag/{tag}")
 def by_tag(tag: str, limit: int = Query(50, le=200)):
-    """All entities of a specific type, sorted by weight."""
-    with db() as conn:
-        rows = conn.execute(
-            "SELECT name, tag, weight, frequency FROM entities "
-            "WHERE tag=? ORDER BY weight DESC, frequency DESC LIMIT ?",
-            (tag, limit)
-        ).fetchall()
+    rows = db.query(
+        "SELECT name, tag, weight, frequency FROM entities WHERE tag=? ORDER BY weight DESC LIMIT ?",
+        (tag, limit)
+    )
     if not rows:
-        raise HTTPException(404, f"No entities found for tag '{tag}'")
-    return [dict(r) for r in rows]
+        raise HTTPException(404, f"No entities for tag '{tag}'")
+    return rows
 
 
 @app.get("/tags")
 def list_tags():
-    """All entity types and their counts."""
-    with db() as conn:
-        rows = conn.execute(
-            "SELECT tag, COUNT(*) as count, AVG(weight) as avg_weight "
-            "FROM entities GROUP BY tag ORDER BY count DESC"
-        ).fetchall()
-    return [dict(r) for r in rows]
+    return db.query("SELECT tag, COUNT(*) as count, AVG(weight) as avg_weight FROM entities GROUP BY tag ORDER BY count DESC")
 
 
 @app.get("/graph")
@@ -268,63 +171,25 @@ def graph(
     top_n: int = Query(200, le=1000),
     min_weight: float = Query(0.5, ge=0.0, le=1.0),
 ):
-    """
-    Full node + edge graph for visualization.
-    top_n limits nodes; only edges between those nodes are returned.
-    """
-    with db() as conn:
-        nodes = conn.execute(
-            "SELECT name, tag, weight, frequency FROM entities "
-            "WHERE weight>=? ORDER BY weight DESC, frequency DESC LIMIT ?",
-            (min_weight, top_n)
-        ).fetchall()
-        node_ids = {r["name"] for r in nodes}
-
-        all_edges = conn.execute("SELECT source, target, relation, strength FROM edges").fetchall()
-        edges = [dict(e) for e in all_edges
-                 if e["source"] in node_ids and e["target"] in node_ids]
-
-    return {
-        "nodes": [dict(n) for n in nodes],
-        "edges": edges[:2000],
-        "meta": {"node_count": len(nodes), "edge_count": len(edges)},
-    }
+    nodes = db.query(
+        "SELECT name, tag, weight, frequency FROM entities WHERE weight>=? ORDER BY weight DESC, frequency DESC LIMIT ?",
+        (min_weight, top_n)
+    )
+    node_ids = {n["name"] for n in nodes}
+    all_edges = db.query("SELECT source, target, relation, strength FROM edges LIMIT 5000")
+    edges = [e for e in all_edges if e["source"] in node_ids and e["target"] in node_ids][:2000]
+    return {"nodes": nodes, "edges": edges, "meta": {"node_count": len(nodes), "edge_count": len(edges)}}
 
 
 @app.post("/entity/{name}/signal")
-def inject_signal(name: str, signal_strength: float = Query(..., ge=0.0, le=1.0),
-                  signal_type: str = "x_engagement"):
-    """
-    Inject a live signal (e.g. from X/Twitter) to boost an entity's weight.
-    Resets the decay clock.
-    """
-    with db() as conn:
-        row = conn.execute("SELECT * FROM entities WHERE name=?", (name,)).fetchone()
-        if not row:
-            raise HTTPException(404, f"Entity '{name}' not found")
+def inject_signal(name: str, signal_strength: float = Query(..., ge=0.0, le=1.0), signal_type: str = "x_engagement"):
+    row = db.query("SELECT weight FROM entities WHERE name=?", (name,), one=True)
+    if not row:
+        raise HTTPException(404, f"Entity '{name}' not found")
+    new_weight = min(0.9999, round(row["weight"] + signal_strength * 0.1, 4))
+    db.execute("UPDATE entities SET weight=?, last_seen=? WHERE name=?", (new_weight, time.time(), name))
+    return {"entity": name, "signal_type": signal_type, "weight_before": row["weight"], "weight_after": new_weight}
 
-        current_weight = row["weight"]
-        new_weight = min(0.9999, round(current_weight + signal_strength * 0.1, 4))
-        conn.execute(
-            "UPDATE entities SET weight=?, last_seen=? WHERE name=?",
-            (new_weight, time.time(), name)
-        )
-        conn.commit()
-
-    return {
-        "entity": name,
-        "signal_type": signal_type,
-        "signal_strength": signal_strength,
-        "weight_before": current_weight,
-        "weight_after": new_weight,
-    }
-
-
-# ─────────────────────────────────────────────
-# START
-# ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("3XB Entity Graph API")
-    print(f"Docs → http://localhost:{PORT}/docs")
     uvicorn.run("api:app", host="0.0.0.0", port=PORT, reload=True)
