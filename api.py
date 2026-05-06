@@ -269,8 +269,13 @@ def graph(
         (min_weight, top_n)
     )
     node_ids = {n["name"] for n in nodes}
-    all_edges = db.query("SELECT source, target, relation, strength FROM edges LIMIT 5000")
-    edges = [e for e in all_edges if e["source"] in node_ids and e["target"] in node_ids][:2000]
+    # Use placeholders to fetch only edges between top nodes directly
+    placeholders = ",".join("?" * len(node_ids))
+    node_list = list(node_ids)
+    edges = db.query(
+        f"SELECT source, target, relation, strength FROM edges WHERE source IN ({placeholders}) AND target IN ({placeholders}) LIMIT 2000",
+        node_list + node_list
+    )
     return {"nodes": nodes, "edges": edges, "meta": {"node_count": len(nodes), "edge_count": len(edges)}}
 
 
