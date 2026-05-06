@@ -154,12 +154,18 @@ def loan_score(name: str):
     if not row:
         raise HTTPException(404, f"Entity '{name}' not found")
     own_weight = decay_weight(row["weight"], row["last_seen"])
-    edges = db.query("SELECT target, strength FROM edges WHERE source=?", (name,))
-    neighbor_scores = []
-    for e in edges:
-        nb = db.query("SELECT weight, last_seen FROM entities WHERE name=?", (e["target"],), one=True)
-        if nb:
-            neighbor_scores.append(decay_weight(nb["weight"], nb["last_seen"]) * e["strength"])
+    # Single batch query: join edges with entity weights instead of N+1 queries
+    neighbors = db.query("""
+        SELECT e.strength, ent.weight, ent.last_seen
+        FROM edges e
+        JOIN entities ent ON ent.name = e.target
+        WHERE e.source = ?
+        LIMIT 100
+    """, (name,))
+    neighbor_scores = [
+        decay_weight(n["weight"], n["last_seen"]) * n["strength"]
+        for n in neighbors
+    ]
     neighbor_avg = round(sum(neighbor_scores) / len(neighbor_scores), 4) if neighbor_scores else own_weight
     composite = round(own_weight * 0.7 + neighbor_avg * 0.3, 4)
     return {
