@@ -13,7 +13,7 @@
 
 ## API
 
-Base URL: https://3xb-api-production.up.railway.app
+Base URL: https://api.earthenwarecomputer.com
 
 - `GET /entity/{name}` — full entity profile: tag, weight, frequency, neighbors
 - `GET /entity/{name}/loan-score` — APPROVE / REVIEW / DECLINE with composite score
@@ -49,4 +49,4 @@ Base URL: https://3xb-api-production.up.railway.app
 
 Community Plan, Inc.
 almeidacorporation20@gmail.com
-https://fitzyracing1.github.io/3xb-api/
+https://earthenwarecomputer.com/

@@ -19,8 +19,8 @@ One API call returns:
 - Their 2-hop relationship risk score (co-signers, prior companies, backers)
 - A composite APPROVE / REVIEW / DECLINE recommendation
 
-Live demo: https://3xb-api-production.up.railway.app/docs
-Try it: https://3xb-api-production.up.railway.app/entity/Google/loan-score
+Live demo: https://api.earthenwarecomputer.com/docs
+Try it: https://api.earthenwarecomputer.com/entity/Google/loan-score
 
 I'd love to explore whether this fits as a tool for OFN members. Would you have 20 minutes this month?
 
@@ -50,8 +50,8 @@ What buyers get:
 
 This is a natural fit for quant funds tracking company/person prominence ahead of news cycles.
 
-Live API: https://3xb-api-production.up.railway.app
-Dataset docs: https://3xb-api-production.up.railway.app/docs
+Live API: https://api.earthenwarecomputer.com
+Dataset docs: https://api.earthenwarecomputer.com/docs
 
 Happy to provide a sample export or walk through the methodology.
 
@@ -78,7 +78,7 @@ What makes it relevant to your portfolio:
 - **Temporal decay** — entity weights degrade without fresh signals, keeping the graph current
 - **X/social signal injection** — live signal hooks to boost entity weight from real-time sources
 
-The system is live at: https://3xb-api-production.up.railway.app
+The system is live at: https://api.earthenwarecomputer.com
 
 Applications include influence network mapping, entity prominence tracking, and relationship-based risk scoring — all from open-source web data.
 
@@ -105,8 +105,8 @@ Here's how it works:
 
 This is built specifically for the lending gap Accion serves — borrowers that FICO misses but the web can validate.
 
-Live demo (try any name): https://3xb-api-production.up.railway.app/entity/Google/loan-score
-Full API: https://3xb-api-production.up.railway.app/docs
+Live demo (try any name): https://api.earthenwarecomputer.com/entity/Google/loan-score
+Full API: https://api.earthenwarecomputer.com/docs
 
 I'd welcome a conversation about integrating this into Accion's underwriting workflow.
 
