@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3XB — Web Entity Intelligence API | Alternative Credit Scoring</title>
+<meta name="description" content="3XB crawls the web in real time, scores 114,000+ entities by prominence and relationship graph, and returns APPROVE / REVIEW / DECLINE loan verdicts via one API call. Built for CDFIs, community lenders, and alternative data buyers.">
+<meta name="keywords" content="alternative credit scoring, CDFI underwriting, entity intelligence, web entity graph, alternative data API, thin file borrowers, loan scoring API, knowledge graph, named entity recognition, NLP dataset, entity relationship data, alternative data provider, quant fund data, hedge fund alternative data, KYC data, AML compliance data, entity risk scoring, web presence scoring, person prominence score, organization data API, business intelligence API, OSINT data, influence network, entity co-occurrence, community development finance, microloan underwriting, credit union data, community bank underwriting">
+<meta property="og:title" content="3XB — Web Entity Intelligence API">
+<meta property="og:description" content="114,000+ entities scored from real-time web crawling. One API call returns a loan score for any borrower. Built for community lenders and alt data buyers.">
+<meta property="og:url" content="https://earthenwarecomputer.com/">
+<meta property="og:type" content="website">
+<meta name="robots" content="index, follow">
+<link rel="sitemap" type="application/xml" href="/3xb-api/sitemap.xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "3XB Web Entity Intelligence API",
+  "description": "Real-time web entity intelligence system that crawls the internet, scores 114,000+ named entities by prominence and relationship graph, and provides alternative credit underwriting scores for community lenders and CDFIs.",
+  "url": "https://earthenwarecomputer.com/",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Starter",
+      "price": "500",
+      "priceCurrency": "USD",
+      "billingIncrement": "P1M",
+      "description": "1,000 API calls/month, entity search, loan score endpoint"
+    },
+    {
+      "@type": "Offer",
+      "name": "Growth",
+      "price": "1500",
+      "priceCurrency": "USD",
+      "billingIncrement": "P1M",
+      "description": "10,000 API calls/month, full graph access, X signal injection"
+    }
+  ],
+  "provider": {
+    "@type": "Organization",
+    "name": "Community Plan, Inc.",
+    "email": "almeidacorporation20@gmail.com"
+  },
+  "featureList": [
+    "114,000+ named entities tracked",
+    "480,000+ relationship edges",
+    "APPROVE / REVIEW / DECLINE loan scoring",
+    "Temporal decay scoring",
+    "Real-time web crawling",
+    "CSV export with loan scores",
+    "REST API"
+  ]
+}
+</script>
+<style>
+  :root {
+    --bg: #07080f;
+    --surface: #0e1018;
+    --border: #1e2133;
+    --cyan: #7df7ff;
+    --pink: #ff6b9d;
+    --yellow: #ffe66d;
+    --green: #a8ff78;
+    --text: #c8cfe0;
+    --muted: #5a6080;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: rgba(7,8,15,0.92); backdrop-filter: blur(12px); z-index: 100;
+  }
+  .logo { font-family: monospace; font-size: 20px; color: var(--cyan); font-weight: bold; letter-spacing: 2px; }
+  .logo span { color: var(--pink); }
+  nav a { color: var(--muted); text-decoration: none; font-size: 14px; margin-left: 32px; transition: color .2s; }
+  nav a:hover { color: #fff; }
+  .nav-cta {
+    background: var(--cyan); color: #000; padding: 8px 20px; border-radius: 6px;
+    font-weight: 600; font-size: 13px; margin-left: 32px;
+  }
+  .nav-cta:hover { background: #fff; color: #000; }
+
+  /* HERO */
+  .hero {
+    text-align: center; padding: 100px 48px 80px;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, #0d1a2e 0%, transparent 70%);
+  }
+  .hero-tag {
+    display: inline-block; background: #0e1a2e; border: 1px solid #1e3a5f;
+    color: var(--cyan); font-size: 12px; font-family: monospace; letter-spacing: 1px;
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 28px;
+  }
+  h1 { font-size: clamp(36px, 6vw, 68px); font-weight: 700; line-height: 1.1; color: #fff; margin-bottom: 24px; }
+  h1 em { font-style: normal; color: var(--cyan); }
+  .hero p { font-size: 19px; color: var(--muted); max-width: 600px; margin: 0 auto 40px; }
+  .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--cyan); color: #000; padding: 14px 32px;
+    border-radius: 8px; font-weight: 700; font-size: 15px; text-decoration: none;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(125,247,255,0.25); }
+  .btn-secondary {
+    background: transparent; color: #fff; padding: 14px 32px;
+    border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none;
+    border: 1px solid var(--border); transition: border-color .15s;
+  }
+  .btn-secondary:hover { border-color: #fff; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex; justify-content: center; gap: 64px; flex-wrap: wrap;
+    padding: 40px 48px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 36px; font-weight: 700; color: #fff; font-family: monospace; }
+  .stat-num span { color: var(--cyan); }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* SECTIONS */
+  section { padding: 96px 48px; max-width: 1100px; margin: 0 auto; }
+  .section-tag { font-family: monospace; font-size: 12px; color: var(--cyan); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+  h2 { font-size: clamp(28px, 4vw, 44px); color: #fff; margin-bottom: 16px; line-height: 1.2; }
+  h2 em { font-style: normal; color: var(--pink); }
+  .section-sub { font-size: 17px; color: var(--muted); max-width: 540px; margin-bottom: 56px; }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+  .step {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px 24px;
+    transition: border-color .2s;
+  }
+  .step:hover { border-color: var(--cyan); }
+  .step-num { font-family: monospace; font-size: 11px; color: var(--cyan); letter-spacing: 2px; margin-bottom: 12px; }
+  .step h3 { font-size: 17px; color: #fff; margin-bottom: 10px; }
+  .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* LOAN SCORER */
+  .loan-demo {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+  }
+  @media(max-width:700px){ .loan-demo { grid-template-columns: 1fr; } }
+  .loan-demo h3 { font-size: 24px; color: #fff; margin-bottom: 12px; }
+  .loan-demo p { color: var(--muted); font-size: 15px; margin-bottom: 24px; }
+  .score-card {
+    background: #0a0c14; border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px; font-family: monospace;
+  }
+  .score-card .borrower { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .score-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
+  .score-row .label { color: var(--muted); }
+  .score-row .value { color: #fff; }
+  .score-row .value.good { color: var(--green); }
+  .composite { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .composite .big { font-size: 40px; font-weight: 700; color: var(--green); }
+  .verdict {
+    display: inline-block; background: rgba(168,255,120,0.12);
+    color: var(--green); border: 1px solid rgba(168,255,120,0.3);
+    padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700;
+    margin-top: 8px; letter-spacing: 1px;
+  }
+  .verdict.review { background: rgba(255,230,109,0.12); color: var(--yellow); border-color: rgba(255,230,109,0.3); }
+  .verdict.decline { background: rgba(255,107,157,0.12); color: var(--pink); border-color: rgba(255,107,157,0.3); }
+
+  /* API ENDPOINTS */
+  .endpoints { display: grid; gap: 12px; }
+  .endpoint {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: border-color .2s;
+  }
+  .endpoint:hover { border-color: var(--border); border-color: #2e3555; }
+  .method {
+    font-family: monospace; font-size: 11px; font-weight: 700; padding: 4px 10px;
+    border-radius: 4px; white-space: nowrap; margin-top: 2px;
+  }
+  .get { background: rgba(125,247,255,0.1); color: var(--cyan); }
+  .post { background: rgba(255,107,157,0.1); color: var(--pink); }
+  .endpoint-path { font-family: monospace; font-size: 14px; color: #fff; margin-bottom: 4px; }
+  .endpoint-desc { font-size: 13px; color: var(--muted); }
+
+  /* PRICING */
+  .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  .plan {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 36px 28px;
+  }
+  .plan.featured { border-color: var(--cyan); background: #0a1520; }
+  .plan-name { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .plan.featured .plan-name { color: var(--cyan); }
+  .plan-price { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .plan-price span { font-size: 16px; color: var(--muted); font-weight: 400; }
+  .plan-desc { font-size: 14px; color: var(--muted); margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .plan ul { list-style: none; }
+  .plan ul li { font-size: 14px; color: var(--text); padding: 7px 0; }
+  .plan ul li::before { content: '✓ '; color: var(--cyan); font-weight: 700; }
+  .plan-btn {
+    display: block; text-align: center; margin-top: 28px;
+    padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    text-decoration: none; transition: all .15s;
+  }
+  .plan-btn.outline { border: 1px solid var(--border); color: #fff; }
+  .plan-btn.outline:hover { border-color: #fff; }
+  .plan-btn.solid { background: var(--cyan); color: #000; }
+  .plan-btn.solid:hover { background: #fff; }
+
+  /* CTA */
+  .cta-section {
+    text-align: center; padding: 96px 48px;
+    border-top: 1px solid var(--border);
+    background: radial-gradient(ellipse 60% 60% at 50% 100%, #0d1a2e 0%, transparent 70%);
+  }
+  .cta-section h2 { margin-bottom: 16px; }
+  .cta-section p { color: var(--muted); font-size: 17px; max-width: 480px; margin: 0 auto 36px; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 32px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 12px;
+  }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: #fff; }
+
+  /* LIVE DEMO */
+  .demo-box {
+    background: #0a0c14; border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-top: 40px;
+  }
+  .demo-bar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 12px 20px; font-family: monospace; font-size: 12px;
+    display: flex; align-items: center; gap: 8px; color: var(--muted);
+  }
+  .demo-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .demo-output { padding: 24px; font-family: monospace; font-size: 13px; line-height: 1.9; overflow-x: auto; }
+  .k { color: var(--muted); }
+  .s { color: var(--cyan); }
+  .n { color: var(--yellow); }
+  .b { color: var(--green); font-weight: bold; }
+  .r { color: var(--pink); font-weight: bold; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">3X<span>B</span></div>
+  <div>
+    <a href="#how">How it works</a>
+    <a href="#api">API</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://api.earthenwarecomputer.com/docs" target="_blank" style="color:#7df7ff;text-decoration:none;font-size:14px;margin-left:32px">Live API ↗</a>
+    <a href="https://launch.earthenwarecomputer.com" target="_blank" style="color:#ff6b9d;text-decoration:none;font-size:14px;margin-left:24px">Launch a Token ↗</a>
+    <a href="mailto:almeidacorporation20@gmail.com" class="nav-cta">Get Access</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">✦ Community Plan, Inc. — Est. ~1924</div>
+  <h1>The web's entity graph,<br><em>scored for lending.</em></h1>
+  <p>3XB crawls the internet in real time, extracts every person, organization, and place, and weights them for community loan underwriting.</p>
+  <div class="hero-btns">
+    <a href="#loan-score" class="btn-primary">See Loan Scorer</a>
+    <a href="#api" class="btn-secondary">View API Docs →</a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num" id="stat-entities">99,000<span>+</span></div>
+    <div class="stat-label">Entities Tagged</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="stat-edges">316,000<span>+</span></div>
+    <div class="stat-label">Relationships Mapped</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="stat-pages">3,500<span>+</span></div>
+    <div class="stat-label">Pages Crawled</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">30<span>+</span></div>
+    <div class="stat-label">Seed Domains</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-tag">// how it works</div>
+  <h2>From raw web to <em>risk score</em></h2>
+  <p class="section-sub">Four layers turn live internet data into actionable underwriting signals.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01 // CRAWL</div>
+      <h3>Live Web Crawler</h3>
+      <p>Async crawler hits 15 pages simultaneously across news, finance, gov, and research domains. Follows links up to 3 hops from seeds.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02 // EXTRACT</div>
+      <h3>NLP Entity Extraction</h3>
+      <p>spaCy named-entity recognition pulls every Person, Organization, Location, Product, and Financial Figure from each page.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03 // SCORE</div>
+      <h3>3XB Weighted Tagging</h3>
+      <p>Sigmoid normalization blends base weight + frequency signals. Temporal decay keeps scores fresh — stale data fades automatically.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04 // GRAPH</div>
+      <h3>Relationship Propagation</h3>
+      <p>Co-occurrence edges build an entity graph. Risk propagates 2 hops — a founder's connected companies affect their composite score.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LOAN SCORER -->
+<section id="loan-score" style="padding-top:0">
+  <div class="section-tag">// core product</div>
+  <h2>Loan scoring, <em>web-native.</em></h2>
+  <p class="section-sub">One API call returns a composite risk score built from entity weight, neighbor graph, and temporal signals.</p>
+  <div class="loan-demo">
+    <div>
+      <h3>score_loan_applicant()</h3>
+      <p>Pass any borrower entity name. 3XB returns their web prominence weight, 2-hop neighbor risk average, and a composite APPROVE / REVIEW / DECLINE verdict.</p>
+      <p style="margin-top:12px">Built for CDFIs, community banks, and microlenders who need alternative data beyond FICO — especially for entrepreneurs with thin credit files but strong web presence.</p>
+    </div>
+    <div class="score-card">
+      <div class="borrower">GET /entity/AI Startup Founder/loan-score</div>
+      <div class="score-row"><span class="label">borrower</span><span class="value">"AI Startup Founder"</span></div>
+      <div class="score-row"><span class="label">own_weight</span><span class="value good">0.8812</span></div>
+      <div class="score-row"><span class="label">neighbor_risk_avg</span><span class="value good">0.7640</span></div>
+      <div class="score-row"><span class="label">neighbor_count</span><span class="value">3</span></div>
+      <div class="composite">
+        <div class="big">0.8419</div>
+        <div style="font-size:12px;color:#5a6080;margin-bottom:8px">composite_score</div>
+        <div class="verdict">✓ APPROVE</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- API -->
+<section id="api" style="padding-top:0">
+  <div class="section-tag">// rest api</div>
+  <h2>Clean API. <em>No setup.</em></h2>
+  <p class="section-sub">Every endpoint returns JSON. Interactive docs at /docs.</p>
+  <div class="endpoints">
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <div><div class="endpoint-path">/entity/{name}</div><div class="endpoint-desc">Full entity detail — tag, weight, frequency, live decayed score, neighbors</div></div>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <div><div class="endpoint-path">/entity/{name}/loan-score</div><div class="endpoint-desc">Composite APPROVE / REVIEW / DECLINE with neighbor graph risk propagation</div></div>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <div><div class="endpoint-path">/entities?tag=Person&min_weight=0.7</div><div class="endpoint-desc">Filtered entity list sorted by weight or frequency</div></div>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <div><div class="endpoint-path">/search?q=Google</div><div class="endpoint-desc">Substring search across all 99K+ tagged entities</div></div>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <div><div class="endpoint-path">/graph?top_n=200</div><div class="endpoint-desc">Full node + edge graph for D3 / Gephi visualization</div></div>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <div><div class="endpoint-path">/entity/{name}/signal</div><div class="endpoint-desc">Inject live X/Twitter signal to boost entity weight and reset decay clock</div></div>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <div><div class="endpoint-path">/stats</div><div class="endpoint-desc">Live crawl stats — pages, unique entities, relationship edges</div></div>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="demo-bar">
+      <div class="dot" style="background:#ff6b9d"></div>
+      <div class="dot" style="background:#ffe66d"></div>
+      <div class="dot" style="background:#a8ff78"></div>
+      <span style="margin-left:8px">curl https://api.earthenwarecomputer.com/stats</span>
+    </div>
+    <div class="demo-output">
+<span class="k">{</span><br>
+&nbsp;&nbsp;<span class="s">"pages_crawled"</span><span class="k">:</span> <span class="n">3524</span><span class="k">,</span><br>
+&nbsp;&nbsp;<span class="s">"unique_entities"</span><span class="k">:</span> <span class="n">99262</span><span class="k">,</span><br>
+&nbsp;&nbsp;<span class="s">"relationship_edges"</span><span class="k">:</span> <span class="n">404686</span><span class="k">,</span><br>
+&nbsp;&nbsp;<span class="s">"entities_by_type"</span><span class="k">:</span> <span class="k">{</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">"Person"</span><span class="k">:</span> <span class="n">35420</span><span class="k">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">"Organization"</span><span class="k">:</span> <span class="n">31807</span><span class="k">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">"Location_Political"</span><span class="k">:</span> <span class="n">8912</span><br>
+&nbsp;&nbsp;<span class="k">},</span><br>
+&nbsp;&nbsp;<span class="s">"top_5"</span><span class="k">: [</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span> <span class="s">"name"</span><span class="k">:</span> <span class="s">"Trump"</span><span class="k">,</span> <span class="s">"tag"</span><span class="k">:</span> <span class="s">"Person"</span><span class="k">,</span> <span class="s">"weight"</span><span class="k">:</span> <span class="n">0.9526</span> <span class="k">}</span><span class="k">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">{</span> <span class="s">"name"</span><span class="k">:</span> <span class="s">"Google"</span><span class="k">,</span> <span class="s">"tag"</span><span class="k">:</span> <span class="s">"Organization"</span><span class="k">,</span> <span class="s">"weight"</span><span class="k">:</span> <span class="n">0.9526</span> <span class="k">}</span><br>
+&nbsp;&nbsp;<span class="k">]</span><br>
+<span class="k">}</span>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" style="padding-top:0">
+  <div class="section-tag">// pricing</div>
+  <h2>Simple, <em>transparent</em> pricing.</h2>
+  <p class="section-sub">Built for CDFIs, credit unions, and community lenders.</p>
+  <div class="pricing">
+    <div class="plan">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">$500<span>/mo</span></div>
+      <div class="plan-desc">For individual loan officers and small CDFIs</div>
+      <ul>
+        <li>1,000 API calls/month</li>
+        <li>Entity search + detail</li>
+        <li>Loan score endpoint</li>
+        <li>Email support</li>
+      </ul>
+      <button onclick="startCheckout('starter')" class="plan-btn outline">Subscribe — $500/mo</button>
+    </div>
+    <div class="plan featured">
+      <div class="plan-name">Growth</div>
+      <div class="plan-price">$1,500<span>/mo</span></div>
+      <div class="plan-desc">For CDFI networks and regional lenders</div>
+      <ul>
+        <li>10,000 API calls/month</li>
+        <li>Full graph access</li>
+        <li>X signal injection</li>
+        <li>Neighbor risk propagation</li>
+        <li>Priority support</li>
+        <li>Custom seed domains</li>
+      </ul>
+      <button onclick="startCheckout('growth')" class="plan-btn solid">Subscribe — $1,500/mo</button>
+    </div>
+    <div class="plan">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-price">Custom</div>
+      <div class="plan-desc">For national networks, hedge funds, and alt data buyers</div>
+      <ul>
+        <li>Unlimited API calls</li>
+        <li>On-prem deployment</li>
+        <li>Custom entity types</li>
+        <li>Raw data export (CSV/JSON)</li>
+        <li>Dedicated crawler instance</li>
+        <li>SLA + dedicated support</li>
+      </ul>
+      <a href="mailto:almeidacorporation20@gmail.com?subject=3XB Enterprise" class="plan-btn outline">Contact Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="padding-top:0">
+  <div class="section-tag">// faq</div>
+  <h2>Common <em>questions.</em></h2>
+  <p class="section-sub">Everything you need to know about 3XB.</p>
+  <div style="display:grid;gap:16px;max-width:800px">
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">How is 3XB different from a credit bureau?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Traditional credit bureaus use financial history — payment records, debt levels, age of accounts. 3XB uses web presence: how often and where an entity appears across the internet. It's additive data for borrowers with thin credit files who have strong real-world traction but limited financial history.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Can 3XB be used for KYC or AML compliance?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. The entity risk scoring and relationship graph supplement KYC and AML workflows by providing web-based prominence and connection data. The 2-hop relationship propagation is particularly useful for identifying counterparty risk and beneficial ownership from public web sources.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Is this an alternative data product for quant funds?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. 3XB sells web entity prominence scores as an alternative dataset. Entity frequency and weight time series provide sentiment-adjacent signals for systematic strategies — tracking how a company or person's web presence shifts ahead of news cycles.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Can I use this for NLP research or as training data?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. The dataset includes 114,000+ named entities with tags, weights, frequency counts, and 480,000+ co-occurrence edges — exportable as JSON or CSV. Useful for entity disambiguation, relation extraction, and knowledge graph research.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">What programming languages work with the API?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Any language that can make HTTP requests — Python, JavaScript, Ruby, Go, Java, curl. The API returns standard JSON. Full interactive docs at <a href="https://api.earthenwarecomputer.com/docs" style="color:var(--cyan)">api.earthenwarecomputer.com/docs</a>.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">How often is the data updated?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">The crawler runs continuously, processing thousands of new pages daily across 45+ seed domains. Entity weights use temporal decay — scores fade automatically without fresh web mentions, keeping the graph current without manual maintenance.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Can I download the full dataset as CSV?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. <code style="color:var(--cyan)">/export</code> returns all entities as a downloadable CSV. Add <code style="color:var(--cyan)">?include_loan_score=true</code> to include composite scores and APPROVE / REVIEW / DECLINE verdicts for each entity.</p>
+    </details>
+  </div>
+</section>
+
+<!-- GRAPH -->
+<section id="graph" style="padding-top:0;max-width:100%;padding-left:0;padding-right:0">
+  <div style="max-width:1100px;margin:0 auto;padding:0 48px 40px">
+    <div class="section-tag">// live entity graph</div>
+    <h2>The web's entity network, <em>live.</em></h2>
+    <p class="section-sub">Top 200 entities by weight. Node size = prominence. Edges = co-occurrence on the same page. Drag · Scroll to zoom · Hover for detail.</p>
+  </div>
+  <div id="graph-container" style="width:100%;height:600px;background:#07080f;border-top:1px solid #1e2133;border-bottom:1px solid #1e2133;position:relative;">
+    <div id="graph-loading" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#5a6080;font-family:monospace;font-size:13px;">Loading entity graph...</div>
+    <svg id="graph-svg" style="width:100%;height:100%"></svg>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="section-tag" style="display:inline-block;margin-bottom:20px">// get started</div>
+  <h2>Ready to see your borrowers<br><em>differently?</em></h2>
+  <p>Join CDFIs and community lenders using web entity intelligence for smarter underwriting.</p>
+  <a href="mailto:almeidacorporation20@gmail.com?subject=3XB Demo Request" class="btn-primary">Request a Demo</a>
+</div>
+
+<footer>
+  <div>© 2026 Community Plan, Inc. — 3XB Weighted Entity Intelligence</div>
+  <div>
+    <a href="#api">API Docs</a> &nbsp;·&nbsp;
+    <a href="mailto:almeidacorporation20@gmail.com">Contact</a>
+  </div>
+</footer>
+
+<style>
+  .plan-btn[onclick] { cursor:pointer; border:none; width:100%; }
+  .plan-btn[onclick]:disabled { opacity:0.6; cursor:wait; }
+  #toast {
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+    background:#0e1018;border:1px solid var(--cyan);color:#fff;
+    padding:14px 28px;border-radius:10px;font-size:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:9999;
+    display:none;text-align:center;
+  }
+  #toast.success { border-color:var(--green); }
+  #toast.error   { border-color:var(--pink);  }
+</style>
+<div id="toast"></div>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+const API = 'https://3xb-api-production.up.railway.app';
+
+function showToast(msg, type='success', ms=4000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, ms);
+}
+
+async function startCheckout(plan) {
+  const btns = document.querySelectorAll('.plan-btn[onclick]');
+  btns.forEach(b => { b.disabled = true; b.textContent = 'Redirecting…'; });
+  try {
+    const res = await fetch(API + '/checkout/' + plan, { method: 'POST' });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Server error');
+    const { url } = await res.json();
+    window.location.href = url;
+  } catch (e) {
+    showToast('Payment unavailable — email almeidacorporation20@gmail.com to subscribe.', 'error', 6000);
+    btns.forEach((b, i) => {
+      b.disabled = false;
+      b.textContent = i === 0 ? 'Subscribe — $500/mo' : 'Subscribe — $1,500/mo';
+    });
+  }
+}
+
+// Show success/cancel message from Stripe redirect
+const params = new URLSearchParams(location.search);
+if (params.get('checkout') === 'success') showToast('✓ Subscription confirmed! Check your email for API access details.', 'success', 8000);
+if (params.get('checkout') === 'cancel')  showToast('Checkout cancelled — come back when you\'re ready.', 'error', 5000);
+
+fetch(API + '/stats')
+  .then(r => r.json())
+  .then(d => {
+    const fmt = n => n.toLocaleString();
+    document.getElementById('stat-entities').innerHTML = fmt(d.unique_entities) + '<span>+</span>';
+    document.getElementById('stat-edges').innerHTML    = fmt(d.relationship_edges) + '<span>+</span>';
+    document.getElementById('stat-pages').innerHTML    = fmt(d.pages_crawled) + '<span>+</span>';
+  })
+  .catch(() => {});
+
+// ── ENTITY GRAPH ──────────────────────────────────────────────
+const COLOR = {
+  "Person":"#ff6b9d","Organization":"#7df7ff","Location_Political":"#ffe66d",
+  "Location_Physical":"#a8ff78","Product":"#ff9f43","FinancialFigure":"#00d2ff",
+  "Event":"#ee5a24","LegalEntity":"#8c7ae6","CreativeWork":"#fd79a8",
+  "Group_NationalOrReligious":"#fdcb6e","Facility":"#55efc4",
+  "TemporalRef":"#636e72","Language":"#b2bec3",
+};
+
+fetch(API + '/graph?top_n=200&min_weight=0.7')
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('graph-loading').remove();
+    const nodes = data.nodes.map(d => ({...d}));
+    const links = data.edges.map(d => ({source: d.source, target: d.target}));
+    const svg = d3.select('#graph-svg');
+    const W = document.getElementById('graph-container').clientWidth;
+    const H = 600;
+    svg.attr('viewBox', `0 0 ${W} ${H}`);
+    const g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([0.2,6]).on('zoom', e => g.attr('transform', e.transform)));
+    function r(d) { return Math.max(4, Math.min(26, 3 + Math.sqrt(d.frequency) * d.weight * 1.2)); }
+    const sim = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(d=>d.name).distance(50).strength(0.3))
+      .force('charge', d3.forceManyBody().strength(-120))
+      .force('center', d3.forceCenter(W/2, H/2))
+      .force('collision', d3.forceCollide(d=>r(d)+2));
+    const link = g.append('g').selectAll('line').data(links).join('line')
+      .attr('stroke','#ffffff10').attr('stroke-width',0.8);
+    const tip = document.createElement('div');
+    tip.style.cssText='position:fixed;background:rgba(5,5,15,.95);border:1px solid #444;padding:8px 12px;border-radius:6px;font-size:12px;font-family:monospace;pointer-events:none;display:none;color:#e0e0e0;z-index:999';
+    document.body.appendChild(tip);
+    const node = g.append('g').selectAll('circle').data(nodes).join('circle')
+      .attr('r', d=>r(d))
+      .attr('fill', d=>COLOR[d.tag]||'#888')
+      .attr('fill-opacity', 0.85)
+      .attr('stroke','#fff2').attr('stroke-width',0.5)
+      .call(d3.drag()
+        .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+        .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+        .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}))
+      .on('mouseover',(e,d)=>{
+        tip.style.display='block';
+        tip.innerHTML=`<b style="color:#7df7ff">${d.name}</b><br>${d.tag}<br>weight: ${d.weight.toFixed(4)}<br>freq: ${d.frequency.toLocaleString()}`;
+        d3.select(e.currentTarget).attr('stroke','#fff').attr('stroke-width',2);
+      })
+      .on('mousemove',e=>{tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-28)+'px';})
+      .on('mouseout',(e)=>{tip.style.display='none';d3.select(e.currentTarget).attr('stroke','#fff2').attr('stroke-width',0.5);});
+    const label = g.append('g').selectAll('text').data(nodes.filter(d=>d.frequency>80)).join('text')
+      .text(d=>d.name).attr('font-size',10).attr('fill','#ffffffaa')
+      .attr('dx',d=>r(d)+3).attr('dy','0.35em').style('pointer-events','none');
+    sim.on('tick',()=>{
+      link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      node.attr('cx',d=>d.x).attr('cy',d=>d.y);
+      label.attr('x',d=>d.x).attr('y',d=>d.y);
+    });
+  })
+  .catch(()=>{ document.getElementById('graph-loading').textContent='Graph unavailable'; });
+</script>
+</body>
+</html>
