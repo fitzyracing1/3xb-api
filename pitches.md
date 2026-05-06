@@ -19,8 +19,10 @@ One API call returns:
 - Their 2-hop relationship risk score (co-signers, prior companies, backers)
 - A composite APPROVE / REVIEW / DECLINE recommendation
 
+Product site: https://earthenwarecomputer.com
 Live demo: https://api.earthenwarecomputer.com/docs
 Try it: https://api.earthenwarecomputer.com/entity/Google/loan-score
+Sample data export: https://api.earthenwarecomputer.com/export?tag=Person&include_loan_score=true&limit=100
 
 I'd love to explore whether this fits as a tool for OFN members. Would you have 20 minutes this month?
 
@@ -50,10 +52,12 @@ What buyers get:
 
 This is a natural fit for quant funds tracking company/person prominence ahead of news cycles.
 
+Product site: https://earthenwarecomputer.com
 Live API: https://api.earthenwarecomputer.com
 Dataset docs: https://api.earthenwarecomputer.com/docs
+Sample CSV export: https://api.earthenwarecomputer.com/export?include_loan_score=true&limit=500
 
-Happy to provide a sample export or walk through the methodology.
+Happy to provide a full data sample or walk through the methodology.
 
 Joshua Fitzgerald
 almeidacorporation20@gmail.com
@@ -78,7 +82,9 @@ What makes it relevant to your portfolio:
 - **Temporal decay** — entity weights degrade without fresh signals, keeping the graph current
 - **X/social signal injection** — live signal hooks to boost entity weight from real-time sources
 
-The system is live at: https://api.earthenwarecomputer.com
+Product site: https://earthenwarecomputer.com
+Live system: https://api.earthenwarecomputer.com
+Interactive docs: https://api.earthenwarecomputer.com/docs
 
 Applications include influence network mapping, entity prominence tracking, and relationship-based risk scoring — all from open-source web data.
 
@@ -105,8 +111,10 @@ Here's how it works:
 
 This is built specifically for the lending gap Accion serves — borrowers that FICO misses but the web can validate.
 
+Product site: https://earthenwarecomputer.com
 Live demo (try any name): https://api.earthenwarecomputer.com/entity/Google/loan-score
 Full API: https://api.earthenwarecomputer.com/docs
+Sample CSV with loan scores: https://api.earthenwarecomputer.com/export?tag=Organization&include_loan_score=true&limit=100
 
 I'd welcome a conversation about integrating this into Accion's underwriting workflow.
 
