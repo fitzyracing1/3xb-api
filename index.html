@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3XB — Web Entity Intelligence API | Alternative Credit Scoring</title>
 <meta name="description" content="3XB crawls the web in real time, scores 114,000+ entities by prominence and relationship graph, and returns APPROVE / REVIEW / DECLINE loan verdicts via one API call. Built for CDFIs, community lenders, and alternative data buyers.">
-<meta name="keywords" content="alternative credit scoring, CDFI underwriting, entity intelligence, web entity graph, alternative data API, thin file borrowers, loan scoring API">
+<meta name="keywords" content="alternative credit scoring, CDFI underwriting, entity intelligence, web entity graph, alternative data API, thin file borrowers, loan scoring API, knowledge graph, named entity recognition, NLP dataset, entity relationship data, alternative data provider, quant fund data, hedge fund alternative data, KYC data, AML compliance data, entity risk scoring, web presence scoring, person prominence score, organization data API, business intelligence API, OSINT data, influence network, entity co-occurrence, community development finance, microloan underwriting, credit union data, community bank underwriting">
 <meta property="og:title" content="3XB — Web Entity Intelligence API">
 <meta property="og:description" content="114,000+ entities scored from real-time web crawling. One API call returns a loan score for any borrower. Built for community lenders and alt data buyers.">
 <meta property="og:url" content="https://earthenwarecomputer.com/">
@@ -459,6 +459,43 @@
       </ul>
       <a href="mailto:almeidacorporation20@gmail.com?subject=3XB Enterprise" class="plan-btn outline">Contact Us</a>
     </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="padding-top:0">
+  <div class="section-tag">// faq</div>
+  <h2>Common <em>questions.</em></h2>
+  <p class="section-sub">Everything you need to know about 3XB.</p>
+  <div style="display:grid;gap:16px;max-width:800px">
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">How is 3XB different from a credit bureau?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Traditional credit bureaus use financial history — payment records, debt levels, age of accounts. 3XB uses web presence: how often and where an entity appears across the internet. It's additive data for borrowers with thin credit files who have strong real-world traction but limited financial history.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Can 3XB be used for KYC or AML compliance?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. The entity risk scoring and relationship graph supplement KYC and AML workflows by providing web-based prominence and connection data. The 2-hop relationship propagation is particularly useful for identifying counterparty risk and beneficial ownership from public web sources.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Is this an alternative data product for quant funds?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. 3XB sells web entity prominence scores as an alternative dataset. Entity frequency and weight time series provide sentiment-adjacent signals for systematic strategies — tracking how a company or person's web presence shifts ahead of news cycles.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Can I use this for NLP research or as training data?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. The dataset includes 114,000+ named entities with tags, weights, frequency counts, and 480,000+ co-occurrence edges — exportable as JSON or CSV. Useful for entity disambiguation, relation extraction, and knowledge graph research.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">What programming languages work with the API?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Any language that can make HTTP requests — Python, JavaScript, Ruby, Go, Java, curl. The API returns standard JSON. Full interactive docs at <a href="https://api.earthenwarecomputer.com/docs" style="color:var(--cyan)">api.earthenwarecomputer.com/docs</a>.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">How often is the data updated?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">The crawler runs continuously, processing thousands of new pages daily across 45+ seed domains. Entity weights use temporal decay — scores fade automatically without fresh web mentions, keeping the graph current without manual maintenance.</p>
+    </details>
+    <details style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px">
+      <summary style="color:#fff;font-size:15px;font-weight:600;cursor:pointer">Can I download the full dataset as CSV?</summary>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;line-height:1.7">Yes. <code style="color:var(--cyan)">/export</code> returns all entities as a downloadable CSV. Add <code style="color:var(--cyan)">?include_loan_score=true</code> to include composite scores and APPROVE / REVIEW / DECLINE verdicts for each entity.</p>
+    </details>
   </div>
 </section>
 

@@ -1,6 +1,6 @@
 # 3XB — Web Entity Intelligence API
 
-> 3XB is a real-time web entity intelligence system built by Community Plan, Inc. It crawls the internet, extracts every named person, organization, and location, scores them by prominence and relationship graph, and serves the results via a REST API. It is used for alternative credit underwriting, alternative data for quantitative finance, and entity influence mapping.
+> 3XB is a real-time web entity intelligence system built by Community Plan, Inc. It crawls the internet, extracts every named person, organization, and location, scores them by prominence and relationship graph, and serves the results via a REST API. It is used for alternative credit underwriting, alternative data for quantitative finance, entity influence mapping, NLP research, knowledge graph construction, and business intelligence.
 
 ## What 3XB does
 
@@ -27,26 +27,114 @@ Base URL: https://api.earthenwarecomputer.com
 
 ## Use cases
 
-- **CDFIs and community lenders**: score thin-file borrowers using web prominence instead of FICO
-- **Quantitative finance**: track entity prominence trends ahead of news cycles
-- **Intelligence and national security**: map influence networks and relationship propagation
-- **Alternative data buyers**: purchase entity weight time series as a dataset product
+### Alternative Credit Scoring
+- Score thin-file borrowers using web prominence instead of FICO
+- Alternative underwriting for CDFIs, credit unions, and community banks
+- Web-based credit scoring for entrepreneurs and small business owners
+- Non-traditional credit data for loan officers
+- Supplement or replace FICO scores with web entity data
+- Underwriting data for microlenders and community development financial institutions
+
+### Alternative Data for Finance
+- Track entity prominence trends ahead of news cycles
+- Quant fund signals — person and company prominence time series
+- Entity frequency data for systematic trading strategies
+- Alternative dataset for hedge funds and asset managers
+- Web presence scoring for pre-IPO company research
+- Sentiment-adjacent signals from entity co-occurrence patterns
+
+### Knowledge Graph and NLP
+- Pre-built named entity recognition dataset
+- Entity relationship graph for NLP research
+- Training data for machine learning models
+- Knowledge graph with 114,000+ nodes and 480,000+ edges
+- Named entity dataset covering Person, Organization, Location, Product
+- Co-occurrence relationship data from real web pages
+- Entity disambiguation dataset
+- Web-scale NLP corpus with entity annotations
+
+### Business Intelligence
+- Company research and due diligence
+- Person prominence and web presence scoring
+- Competitive intelligence — track organization mentions
+- Executive visibility scoring
+- Startup and founder research database
+- Investor and board member relationship mapping
+
+### Risk and Compliance
+- Entity risk scoring for KYC and AML workflows
+- Relationship-based risk propagation for compliance teams
+- Counterparty risk assessment using web data
+- Beneficial ownership research from public web sources
+- PEP (politically exposed person) prominence scoring
+
+### Intelligence and Research
+- Influence network mapping from open-source web data
+- Entity prominence tracking for OSINT
+- Relationship propagation for threat analysis
+- Public figure web presence scoring
+- Organization connection mapping
 
 ## Data
 
 - 114,000+ unique entities tagged
 - 480,000+ relationship edges
-- 4,500+ pages crawled
+- 4,500+ pages crawled from 45+ seed domains
 - Entity types: Person, Organization, Location_Political, Location_Physical, Product, CreativeWork, LegalEntity, FinancialFigure, Event, Facility, Group_NationalOrReligious, TemporalRef
+- Seed domains include: Reuters, AP News, Wikipedia, SEC EDGAR, arXiv, Congress.gov, Forbes, TechCrunch, Bloomberg, Opportunity Finance Network, CDFI Fund, CFPB, FDIC, SBA
+
+## Frequently Asked Questions
+
+**What is 3XB?**
+3XB is a web entity intelligence API that crawls the internet in real time, extracts named entities (people, organizations, locations), and scores them by prominence and relationship graph.
+
+**How is 3XB different from a credit bureau?**
+Traditional credit bureaus use financial history. 3XB uses web presence — how often and where an entity appears across the internet. It is additive data for borrowers with thin credit files.
+
+**Can 3XB replace FICO?**
+3XB is designed as a supplement to FICO, not a replacement. It fills the gap for borrowers with strong web presence but limited credit history.
+
+**What data does 3XB crawl?**
+News sites, SEC filings, Wikipedia, government records (Congress, White House, Federal Register), academic sources (arXiv), financial data (Bloomberg, Yahoo Finance), and CDFI/community lending sources.
+
+**Is there a free trial?**
+The API has public endpoints you can test at https://api.earthenwarecomputer.com/docs. The loan score endpoint is live at https://api.earthenwarecomputer.com/entity/Google/loan-score.
+
+**Can I download the data as CSV?**
+Yes. https://api.earthenwarecomputer.com/export returns a CSV of all entities. Add ?include_loan_score=true for loan verdicts.
+
+**What programming languages does the API support?**
+Any language that can make HTTP requests — Python, JavaScript, Ruby, Go, Java, curl, etc.
+
+**How often is the data updated?**
+The crawler runs continuously, adding thousands of new pages daily. Entity weights decay automatically over time without fresh mentions.
+
+**What is the relationship graph?**
+When two entities appear on the same web page, they get a co-occurrence edge. This builds a graph of 480,000+ relationships used for 2-hop risk propagation in loan scoring.
+
+**Who uses 3XB?**
+CDFIs, community lenders, credit unions, quant funds, alternative data buyers, NLP researchers, and intelligence analysts.
+
+**What is a CDFI?**
+A Community Development Financial Institution is a specialized financial organization that provides affordable lending to underserved communities. 3XB helps CDFIs underwrite borrowers with thin credit files.
+
+**Can I use 3XB for KYC or AML?**
+Yes. The entity risk scoring and relationship graph can supplement KYC and AML workflows by providing web-based prominence and connection data.
+
+**Is 3XB an alternative data provider?**
+Yes. 3XB sells web entity prominence scores as an alternative dataset to quantitative finance firms, hedge funds, and data marketplaces like Battlefin.
+
+**Does 3XB have a knowledge graph?**
+Yes. The 3XB graph has 114,000+ entity nodes and 480,000+ relationship edges built from co-occurrence across the web.
 
 ## Pricing
 
 - Starter: $500/month — 1,000 API calls, entity search, loan score endpoint
 - Growth: $1,500/month — 10,000 API calls, full graph, X signal injection, priority support
-- Enterprise: Custom — unlimited calls, on-prem, raw data export
+- Enterprise: Custom — unlimited calls, on-prem, raw data export, dedicated crawler
 
 ## Contact
 
 Community Plan, Inc.
 almeidacorporation20@gmail.com
-https://earthenwarecomputer.com/
+https://earthenwarecomputer.com
