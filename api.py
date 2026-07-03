@@ -19,6 +19,8 @@ import stripe
 
 import db
 
+db.init_db()
+
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
 PLANS = {

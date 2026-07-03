@@ -66,3 +66,26 @@ def execute(sql: str, params: tuple = ()):
         else:
             conn.execute(sql, params)
             conn.commit()
+
+
+def init_db():
+    """Create tables if they don't exist (fresh SQLite local dev setup)."""
+    if USE_POSTGRES:
+        return
+    schema = [
+        """CREATE TABLE IF NOT EXISTS entities (
+            name TEXT PRIMARY KEY, tag TEXT, weight REAL,
+            frequency INTEGER DEFAULT 1, last_seen REAL, metadata TEXT
+        )""",
+        """CREATE TABLE IF NOT EXISTS edges (
+            source TEXT, target TEXT, relation TEXT, strength REAL,
+            PRIMARY KEY (source, target, relation)
+        )""",
+        """CREATE TABLE IF NOT EXISTS crawled_urls (
+            url TEXT PRIMARY KEY, crawled_at REAL, entity_count INTEGER
+        )""",
+    ]
+    with get_conn() as conn:
+        for stmt in schema:
+            conn.execute(stmt)
+        conn.commit()
