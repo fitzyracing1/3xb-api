@@ -11,6 +11,8 @@ import os
 import time
 from typing import List, Optional
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
@@ -34,10 +36,17 @@ PLANS = {
 
 PORT = int(os.environ.get("PORT", 8000))
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    db.init_db()
+    yield
+
+
 app = FastAPI(
     title="3XB Entity Graph API",
     description="Weighted entity tagging across the web — by Community Plan, Inc.",
     version="2.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -48,8 +57,21 @@ app.add_middleware(
 )
 
 
-def decay_weight(weight: float, last_seen: float, half_life_days: float = 30.0) -> float:
-    days = (time.time() - last_seen) / 86400
+@app.exception_handler(db.DatabaseError)
+def database_error_handler(request: Request, exc: db.DatabaseError):
+    return JSONResponse(
+        status_code=503,
+        content={"detail": f"Database unavailable: {exc}"},
+    )
+
+
+def decay_weight(weight: float, last_seen: Optional[float], half_life_days: float = 30.0) -> float:
+    """Exponentially decay a weight based on time since last sighting."""
+    if weight is None:
+        return 0.0
+    if not last_seen:
+        return round(weight, 4)
+    days = max(0.0, (time.time() - last_seen) / 86400)
     factor = math.exp(-math.log(2) * days / half_life_days)
     return round(weight * factor, 4)
 
@@ -138,7 +160,11 @@ def list_entities(
 def get_entity(name: str):
     row = db.query("SELECT * FROM entities WHERE name=?", (name,), one=True)
     if not row:
+        # Fall back to case-insensitive match so /entity/google finds "Google"
+        row = db.query("SELECT * FROM entities WHERE LOWER(name)=LOWER(?)", (name,), one=True)
+    if not row:
         raise HTTPException(404, f"Entity '{name}' not found")
+    name = row["name"]
     row["live_weight"] = decay_weight(row["weight"], row["last_seen"])
     row["highlighted"] = row["live_weight"] >= 0.75
     row["neighbors"] = db.query(
@@ -150,9 +176,15 @@ def get_entity(name: str):
 
 @app.get("/entity/{name}/loan-score")
 def loan_score(name: str):
-    row = db.query("SELECT weight, last_seen FROM entities WHERE name=?", (name,), one=True)
+    row = db.query("SELECT name, weight, last_seen FROM entities WHERE name=?", (name,), one=True)
+    if not row:
+        row = db.query(
+            "SELECT name, weight, last_seen FROM entities WHERE LOWER(name)=LOWER(?)",
+            (name,), one=True
+        )
     if not row:
         raise HTTPException(404, f"Entity '{name}' not found")
+    name = row["name"]
     own_weight = decay_weight(row["weight"], row["last_seen"])
     # Single batch query: join edges with entity weights instead of N+1 queries
     neighbors = db.query("""
@@ -181,7 +213,7 @@ def loan_score(name: str):
 @app.get("/search")
 def search(q: str = Query(..., min_length=2), limit: int = Query(20, le=100)):
     return db.query(
-        "SELECT name, tag, weight, frequency FROM entities WHERE name LIKE ? ORDER BY weight DESC LIMIT ?",
+        "SELECT name, tag, weight, frequency FROM entities WHERE LOWER(name) LIKE LOWER(?) ORDER BY weight DESC LIMIT ?",
         (f"%{q}%", limit)
     )
 
@@ -237,12 +269,18 @@ def export_csv(
             "last_seen_unix": int(r["last_seen"]),
         }
         if include_loan_score:
-            edges = db.query("SELECT target, strength FROM edges WHERE source=?", (r["name"],))
-            scores = []
-            for e in edges:
-                nb = db.query("SELECT weight, last_seen FROM entities WHERE name=?", (e["target"],), one=True)
-                if nb:
-                    scores.append(decay_weight(nb["weight"], nb["last_seen"]) * e["strength"])
+            # Single batch query per entity: join edges with neighbor weights
+            neighbors = db.query("""
+                SELECT e.strength, ent.weight, ent.last_seen
+                FROM edges e
+                JOIN entities ent ON ent.name = e.target
+                WHERE e.source = ?
+                LIMIT 100
+            """, (r["name"],))
+            scores = [
+                decay_weight(n["weight"], n["last_seen"]) * n["strength"]
+                for n in neighbors
+            ]
             neighbor_avg = round(sum(scores) / len(scores), 4) if scores else live
             composite = round(live * 0.7 + neighbor_avg * 0.3, 4)
             row["own_weight"] = live
@@ -268,14 +306,16 @@ def graph(
         "SELECT name, tag, weight, frequency FROM entities WHERE weight>=? ORDER BY weight DESC, frequency DESC LIMIT ?",
         (min_weight, top_n)
     )
-    node_ids = {n["name"] for n in nodes}
-    # Use placeholders to fetch only edges between top nodes directly
-    placeholders = ",".join("?" * len(node_ids))
-    node_list = list(node_ids)
-    edges = db.query(
-        f"SELECT source, target, relation, strength FROM edges WHERE source IN ({placeholders}) AND target IN ({placeholders}) LIMIT 2000",
-        node_list + node_list
-    )
+    node_list = list({n["name"] for n in nodes})
+    if node_list:
+        # Use placeholders to fetch only edges between top nodes directly
+        placeholders = ",".join("?" * len(node_list))
+        edges = db.query(
+            f"SELECT source, target, relation, strength FROM edges WHERE source IN ({placeholders}) AND target IN ({placeholders}) LIMIT 2000",
+            node_list + node_list
+        )
+    else:
+        edges = []
     return {"nodes": nodes, "edges": edges, "meta": {"node_count": len(nodes), "edge_count": len(edges)}}
 
 
